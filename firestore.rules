@@ -1,0 +1,320 @@
+rules_version = '2';
+
+// Nearby — Firestore security rules.
+//
+// Principles:
+//   * Nothing is readable or writable without authentication.
+//   * A user may only write their own records.
+//   * A business's listing, services and hours are writable only by its owner.
+//   * Ratings are not client-writable at all — a Cloud Function owns them,
+//     because anyone who can write their own rating can inflate it.
+//   * Booking creation is validated against the *stored* service and business,
+//     so a crafted request cannot invent a price, a duration, or an owner.
+//   * Booking state changes are restricted to the transitions the domain
+//     permits, by the party entitled to make them.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function userData() {
+      return get(/databases/$(database)/documents/users/$(uid())).data;
+    }
+
+    function isCustomer() {
+      return userData().role == 'customer';
+    }
+
+    function isBusinessOwner() {
+      return userData().role == 'businessOwner';
+    }
+
+    /// The business this user owns, or null. Compared against a query filter
+    /// rather than fetched per document, which is what keeps list rules cheap.
+    function myBusinessId() {
+      return userData().get('businessId', null);
+    }
+
+    function businessData(businessId) {
+      return get(/databases/$(database)/documents/businesses/$(businessId)).data;
+    }
+
+    function ownsBusiness(businessId) {
+      return isSignedIn() && businessData(businessId).ownerId == uid();
+    }
+
+    function serviceData(businessId, serviceId) {
+      return get(
+        /databases/$(database)/documents/businesses/$(businessId)/services/$(serviceId)
+      ).data;
+    }
+
+    function bookingData(bookingId) {
+      return get(/databases/$(database)/documents/bookings/$(bookingId)).data;
+    }
+
+    /// Restricts an update to a known set of fields.
+    function changedKeysWithin(allowed) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowed);
+    }
+
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    // -------------------------------------------------------------------------
+    // users
+    //
+    // Private to their owner. Customer and business names are denormalised onto
+    // bookings and reviews at write time, so nothing else ever needs to read a
+    // user document — which means this collection can stay fully closed.
+    // -------------------------------------------------------------------------
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && uid() == userId;
+
+      // No listing: there is no legitimate reason to enumerate accounts.
+      allow list: if false;
+
+      allow create: if isSignedIn()
+        && uid() == userId
+        && request.resource.data.role in ['customer', 'businessOwner']
+        // A new account cannot arrive already attached to a business.
+        && request.resource.data.get('businessId', null) == null;
+
+      allow update: if isSignedIn()
+        && uid() == userId
+        // The role is fixed at creation. Without this, a customer could
+        // promote themselves to a business owner.
+        && unchanged('role')
+        && unchanged('email')
+        && unchanged('createdAt')
+        && changedKeysWithin([
+          'displayName', 'phone', 'photoUrl', 'businessId',
+        ]);
+
+      // Account deletion goes through a support process, not the client.
+      allow delete: if false;
+
+      // Push tokens, written by the device that owns them.
+      match /deviceTokens/{tokenId} {
+        allow read, write: if isSignedIn() && uid() == userId;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // businesses
+    //
+    // Readable by any signed-in user — this is the discovery corpus. Writable
+    // only by the owner, and never for the rating fields.
+    // -------------------------------------------------------------------------
+
+    match /businesses/{businessId} {
+      allow get, list: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && isBusinessOwner()
+        && request.resource.data.ownerId == uid()
+        // One listing per owner: a second create is refused because the first
+        // one set `businessId` on the user document.
+        && myBusinessId() == null
+        // Ratings start at zero and are the Cloud Function's from then on.
+        && request.resource.data.ratingAverage == 0
+        && request.resource.data.ratingCount == 0
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 1
+        && request.resource.data.latitude is number
+        && request.resource.data.longitude is number
+        && request.resource.data.geohash is string;
+
+      allow update: if isSignedIn()
+        && resource.data.ownerId == uid()
+        // Ownership cannot be transferred by a client write.
+        && unchanged('ownerId')
+        // Ratings are server-owned. The Cloud Function uses the Admin SDK,
+        // which bypasses these rules, so it can still update them.
+        && unchanged('ratingAverage')
+        && unchanged('ratingCount');
+
+      // Delisting is a support operation; a stale listing is less harmful than
+      // orphaning the bookings that reference it.
+      allow delete: if false;
+
+      match /services/{serviceId} {
+        allow get, list: if isSignedIn();
+
+        allow create, update: if ownsBusiness(businessId)
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.price is number
+          && request.resource.data.price >= 0
+          && request.resource.data.durationMinutes is number
+          && request.resource.data.durationMinutes > 0
+          && request.resource.data.durationMinutes <= 480;
+
+        // Services are deactivated, never deleted — bookings reference them.
+        allow delete: if false;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // bookings
+    // -------------------------------------------------------------------------
+
+    match /bookings/{bookingId} {
+      allow get: if isSignedIn()
+        && (
+          resource.data.customerId == uid()
+          || resource.data.businessId == myBusinessId()
+        );
+
+      // A query is only permitted if its filters guarantee every result
+      // satisfies this condition — so an unfiltered read of the collection is
+      // rejected, while "my bookings" and "my shop's bookings" are allowed.
+      allow list: if isSignedIn()
+        && (
+          resource.data.customerId == uid()
+          || resource.data.businessId == myBusinessId()
+        );
+
+      allow create: if isSignedIn()
+        && isCustomer()
+        && request.resource.data.customerId == uid()
+        // Every booking starts pending; a client cannot self-confirm.
+        && request.resource.data.status == 'pending'
+        && request.resource.data.hasReview == false
+        && request.resource.data.startTime is timestamp
+        && request.resource.data.endTime is timestamp
+        && request.resource.data.startTime < request.resource.data.endTime
+        // Cannot book into the past.
+        && request.resource.data.startTime > request.time
+        // The business must actually be open for business.
+        && businessData(request.resource.data.businessId).isAcceptingBookings == true
+        // Price and duration are checked against the stored service, so a
+        // tampered request cannot book an hour at a half-hour price.
+        && request.resource.data.servicePrice ==
+             serviceData(request.resource.data.businessId, request.resource.data.serviceId).price
+        && request.resource.data.endTime ==
+             request.resource.data.startTime + duration.value(
+               serviceData(request.resource.data.businessId, request.resource.data.serviceId).durationMinutes,
+               'm'
+             )
+        && serviceData(request.resource.data.businessId, request.resource.data.serviceId).isActive == true;
+
+      allow update: if isSignedIn() && (
+        // --- Customer cancels their own booking ---
+        (
+          resource.data.customerId == uid()
+          && resource.data.status in ['pending', 'confirmed']
+          && request.resource.data.status == 'cancelled'
+          && request.resource.data.cancelledBy == 'customer'
+          && changedKeysWithin(['status', 'cancelledBy', 'cancelledAt'])
+        )
+        // --- Business confirms, completes or cancels ---
+        || (
+          resource.data.businessId == myBusinessId()
+          && resource.data.status in ['pending', 'confirmed']
+          && request.resource.data.status in ['confirmed', 'completed', 'cancelled']
+          && (
+            request.resource.data.status != 'cancelled'
+            || request.resource.data.cancelledBy == 'business'
+          )
+          && changedKeysWithin([
+            'status', 'cancelledBy', 'cancelledAt', 'completedAt',
+          ])
+        )
+        // --- Customer marks their completed booking as reviewed ---
+        //
+        // Written in the same transaction as the review itself. One direction
+        // only, so the flag cannot be reset to leave a second review.
+        || (
+          resource.data.customerId == uid()
+          && resource.data.status == 'completed'
+          && resource.data.hasReview == false
+          && request.resource.data.hasReview == true
+          && changedKeysWithin(['hasReview'])
+        )
+      );
+
+      // History is kept. Cancelling is the way to withdraw a booking.
+      allow delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // slotLocks
+    //
+    // One document per claimed appointment slot, with a deterministic ID. This
+    // collection is the concurrency mechanism: `create` in Firestore only
+    // succeeds when the document does not already exist, so of two customers
+    // racing for the same slot exactly one write can land.
+    // -------------------------------------------------------------------------
+
+    match /slotLocks/{lockId} {
+      // Read is needed inside the booking transaction.
+      allow get: if isSignedIn();
+
+      // Nothing legitimately enumerates locks, and listing them would leak
+      // every shop's schedule.
+      allow list: if false;
+
+      allow create: if isSignedIn()
+        && isCustomer()
+        && request.resource.data.customerId == uid()
+        && request.resource.data.businessId is string
+        && request.resource.data.bookingId is string
+        && request.resource.data.slotStart is timestamp;
+
+      // A lock is released by whoever cancelled the booking.
+      allow delete: if isSignedIn()
+        && (
+          resource.data.customerId == uid()
+          || resource.data.businessId == myBusinessId()
+        );
+
+      // A lock is never edited — it is created and deleted.
+      allow update: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // reviews
+    // -------------------------------------------------------------------------
+
+    match /reviews/{reviewId} {
+      allow get, list: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && isCustomer()
+        && request.resource.data.customerId == uid()
+        // The document ID is derived from the booking, so a duplicate review
+        // collides with the existing document instead of adding a second one.
+        && reviewId == 'booking_' + request.resource.data.bookingId
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.get('comment', '') is string
+        // Only for the caller's own, completed booking at this business.
+        && bookingData(request.resource.data.bookingId).customerId == uid()
+        && bookingData(request.resource.data.bookingId).status == 'completed'
+        && bookingData(request.resource.data.bookingId).businessId
+             == request.resource.data.businessId;
+
+      // Immutable once posted. Editing a review would silently invalidate the
+      // aggregate the Cloud Function has already applied.
+      allow update, delete: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Anything not matched above is denied. Nearby ships with no catch-all.
+    // -------------------------------------------------------------------------
+  }
+}

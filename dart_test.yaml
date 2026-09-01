@@ -1,0 +1,13 @@
+# Golden renders are a design-review tool, not a regression gate.
+#
+# They are excluded from `flutter test` on purpose: a golden fails on every
+# deliberate visual change, so gating on them turns each design decision into a
+# chore and trains people to regenerate without looking. The behavioural
+# guarantees — touch targets, text scaling, the four async states — live in
+# test/widget and do run on every invocation.
+#
+# To review or regenerate the renders:
+#   flutter test --update-goldens --run-skipped test/golden
+tags:
+  golden:
+    skip: "Design-review renders. Run: flutter test --update-goldens --run-skipped test/golden"

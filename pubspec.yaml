@@ -1,0 +1,41 @@
+name: nearby
+description: "Nearby — discover and book local services. First vertical is tailoring."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Navigation
+  go_router: ^14.6.2
+
+  # Firebase (MVP backend — isolated behind repository interfaces)
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.3.4
+  cloud_firestore: ^5.6.0
+  firebase_storage: ^12.3.7
+  firebase_messaging: ^15.1.6
+  firebase_crashlytics: ^4.2.0
+  firebase_analytics: ^11.3.6
+
+  # Device capabilities
+  geolocator: ^13.0.2
+  image_picker: ^1.1.2
+
+  # Formatting
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

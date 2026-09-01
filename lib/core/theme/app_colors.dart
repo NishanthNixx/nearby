@@ -10,9 +10,10 @@ import 'package:flutter/material.dart';
 /// values." And: "Avoid redefining the semantic meanings of dynamic system
 /// colors... don't use the separator color as a text color."
 ///
-/// Nearby's scheme is **Monochrome & Gold, dark-first**: a near-black ground,
-/// cards separated by surface value rather than borders, a white primary
-/// action, and gold as the single hue — reserved for ratings and open-now.
+/// Nearby's scheme is **Spectrum, dark-first**: a near-black ground, cards
+/// separated by surface value rather than borders, and the two halves of the
+/// app icon carrying two different jobs — a cool cyan for anything tappable,
+/// a warm orange for anything merely informative.
 ///
 /// Four variants exist — light, dark, and an increased-contrast version of
 /// each — because the platform exposes an Increase Contrast setting.
@@ -95,9 +96,10 @@ class AppColors extends ThemeExtension<AppColors> {
   // Brand
   // ---------------------------------------------------------------------------
 
-  /// The primary action colour: white on the dark appearance, near-black on
-  /// the light one. Maximum contrast against the ground is the whole idea —
-  /// the booking pill is the brightest object on the screen.
+  /// The primary action colour: the icon's cyan. On the near-black ground a
+  /// saturated cyan pill carrying near-black text is the brightest, most
+  /// chromatic object on the screen (9.89:1 against the ground), so the eye
+  /// still lands on the booking action first — the job white used to do.
   ///
   /// Design guideline — Color > Best practices: "Avoid using the same color to
   /// mean different things." In Nearby, [primary] means *tappable* or *this is
@@ -113,9 +115,9 @@ class AppColors extends ThemeExtension<AppColors> {
   /// Text/icons on top of [primaryContainer].
   final Color onPrimaryContainer;
 
-  /// Gold — the one hue in the scheme. Ratings, open-now, and nothing else.
-  /// Never a surface fill, never interactivity. Kept under a tenth of any
-  /// screen; used generously it stops meaning anything.
+  /// The icon's warm orange. Ratings, open-now, and prices — information the
+  /// eye should find fast. Never interactivity: warm is the one thing in this
+  /// app that is never tappable, which is what keeps [primary] unambiguous.
   final Color accent;
   final Color onAccent;
   final Color accentContainer;
@@ -149,123 +151,131 @@ class AppColors extends ThemeExtension<AppColors> {
   // ---------------------------------------------------------------------------
 
   // ---------------------------------------------------------------------------
-  // Monochrome & Gold — dark-first.
+  // Spectrum — dark-first.
   //
-  // The scheme is built on three rules taken from the reference direction:
+  // The palette is taken from the app icon, which splits into a cool half (the
+  // cyan-to-indigo stem) and a warm half (the magenta-to-orange arch and dot).
+  // That split is the whole system:
   //
-  // 1. The ground is near-black and the cards sit on it as slightly lighter
+  // 1. The ground stays near-black and cards sit on it as slightly lighter
   //    fills — separation comes from surface value, not from hairline borders.
-  // 2. The primary action is WHITE. On a near-black screen a white pill is the
-  //    highest-contrast object that can exist (19.7:1), so the eye lands on the
-  //    booking action before anything else. Inverted selection follows the same
-  //    rule: a selected date or slot is a white cell with black text.
-  // 3. Exactly one hue: gold, reserved for ratings and open-now. Everything
-  //    else is monochrome. One colour used sparingly reads as expensive; three
-  //    colours used generously read as a template.
+  //    Colour is spent on meaning, never on structure.
+  // 2. COOL MEANS TAPPABLE. The primary action is a saturated cyan pill with
+  //    near-black text. Selected chips, focus rings and links are cool too.
+  //    Nothing that cannot be tapped is ever cyan.
+  // 3. WARM MEANS INFORMATIVE. Ratings, open-now and price emphasis are
+  //    orange. Warm is never interactive. Because the two families sit at
+  //    opposite ends of the spectrum, a glance is enough to tell an action
+  //    from a fact — which is the same discipline the previous monochrome
+  //    scheme enforced with value, now enforced with hue.
+  //
+  // The full spectrum appears only where identity is the point: the brand mark
+  // and business avatars (see AppGradients and IdentityPalette). Elsewhere a
+  // screen shows at most one cool and one warm accent, so the app reads as
+  // vivid rather than busy.
   //
   // Dark is the app's committed appearance (see app.dart). The light variants
-  // below keep the same logic inverted — a black pill on off-white — so a
-  // light mode can be reinstated by flipping one line.
+  // deepen both hues to hold contrast on white; the roles do not move.
   // ---------------------------------------------------------------------------
 
   static const AppColors dark = AppColors(
     brightness: Brightness.dark,
-    bgBase: Color(0xFF0B0B0C),
-    bgGrouped: Color(0xFF0B0B0C),
-    surface: Color(0xFF161619),
-    surfaceRaised: Color(0xFF202024),
+    bgBase: Color(0xFF09090E),
+    bgGrouped: Color(0xFF09090E),
+    surface: Color(0xFF14141C),
+    surfaceRaised: Color(0xFF1E1E28),
     label: Color(0xFFFFFFFF),
-    labelSecondary: Color(0xFF9C9CA4),
-    labelTertiary: Color(0xFF6E6E77),
-    separator: Color(0xFF26262B),
-    primary: Color(0xFFFFFFFF),
-    onPrimary: Color(0xFF0B0B0C),
-    primaryContainer: Color(0xFF202024),
-    onPrimaryContainer: Color(0xFFFFFFFF),
-    accent: Color(0xFFE9A23B),
-    onAccent: Color(0xFF241703),
-    accentContainer: Color(0xFF3A2A10),
-    onAccentContainer: Color(0xFFF7D9A6),
-    open: Color(0xFFE9A23B),
-    closed: Color(0xFFE8796B),
-    warning: Color(0xFFE9A23B),
-    error: Color(0xFFE8796B),
-    skeleton: Color(0xFF1C1C20),
+    labelSecondary: Color(0xFF9C9CB0),
+    labelTertiary: Color(0xFF6C6C80),
+    separator: Color(0xFF25252F),
+    primary: Color(0xFF3FC5F0),
+    onPrimary: Color(0xFF03202B),
+    primaryContainer: Color(0xFF0B2E3C),
+    onPrimaryContainer: Color(0xFFA9E4F7),
+    accent: Color(0xFFFF9440),
+    onAccent: Color(0xFF2A1204),
+    accentContainer: Color(0xFF3A2110),
+    onAccentContainer: Color(0xFFFFD0A6),
+    open: Color(0xFFFF9440),
+    closed: Color(0xFF8A8A9E),
+    warning: Color(0xFFFFB443),
+    error: Color(0xFFFF6B7A),
+    skeleton: Color(0xFF1A1A22),
   );
 
   static const AppColors light = AppColors(
     brightness: Brightness.light,
-    bgBase: Color(0xFFFAFAFA),
-    bgGrouped: Color(0xFFF1F1F2),
+    bgBase: Color(0xFFFAFAFC),
+    bgGrouped: Color(0xFFF1F1F5),
     surface: Color(0xFFFFFFFF),
     surfaceRaised: Color(0xFFFFFFFF),
-    label: Color(0xFF0B0B0C),
-    labelSecondary: Color(0xFF5A5A62),
-    labelTertiary: Color(0xFF8A8A93),
-    separator: Color(0xFFE4E4E7),
-    primary: Color(0xFF111113),
+    label: Color(0xFF0A0A12),
+    labelSecondary: Color(0xFF55556A),
+    labelTertiary: Color(0xFF84849A),
+    separator: Color(0xFFE3E3EA),
+    primary: Color(0xFF0B6E96),
     onPrimary: Color(0xFFFFFFFF),
-    primaryContainer: Color(0xFFF1F1F2),
-    onPrimaryContainer: Color(0xFF111113),
-    accent: Color(0xFF8A5A0B),
+    primaryContainer: Color(0xFFE0F4FC),
+    onPrimaryContainer: Color(0xFF06394D),
+    accent: Color(0xFFA64B08),
     onAccent: Color(0xFFFFFFFF),
-    accentContainer: Color(0xFFFBEFD9),
-    onAccentContainer: Color(0xFF4A3005),
-    open: Color(0xFF8A5A0B),
-    closed: Color(0xFFB3392B),
+    accentContainer: Color(0xFFFDECDC),
+    onAccentContainer: Color(0xFF5A2905),
+    open: Color(0xFFA64B08),
+    closed: Color(0xFF6B6B80),
     warning: Color(0xFF8A5A0B),
-    error: Color(0xFFB3392B),
-    skeleton: Color(0xFFEAEAEC),
+    error: Color(0xFFC0243C),
+    skeleton: Color(0xFFEAEAEF),
   );
 
   static const AppColors darkHighContrast = AppColors(
     brightness: Brightness.dark,
     bgBase: Color(0xFF000000),
     bgGrouped: Color(0xFF000000),
-    surface: Color(0xFF101013),
-    surfaceRaised: Color(0xFF1A1A1E),
+    surface: Color(0xFF0E0E14),
+    surfaceRaised: Color(0xFF18181F),
     label: Color(0xFFFFFFFF),
-    labelSecondary: Color(0xFFC9C9D0),
-    labelTertiary: Color(0xFF9C9CA4),
-    separator: Color(0xFF4A4A52),
-    primary: Color(0xFFFFFFFF),
-    onPrimary: Color(0xFF0B0B0C),
-    primaryContainer: Color(0xFF202024),
-    onPrimaryContainer: Color(0xFFFFFFFF),
-    accent: Color(0xFFF5C070),
-    onAccent: Color(0xFF241703),
-    accentContainer: Color(0xFF2E200A),
-    onAccentContainer: Color(0xFFFBE6C4),
-    open: Color(0xFFF5C070),
-    closed: Color(0xFFF5A79A),
-    warning: Color(0xFFF5C070),
-    error: Color(0xFFF5A79A),
-    skeleton: Color(0xFF1C1C20),
+    labelSecondary: Color(0xFFCCCCD8),
+    labelTertiary: Color(0xFF9C9CB0),
+    separator: Color(0xFF4A4A57),
+    primary: Color(0xFF7FDBFF),
+    onPrimary: Color(0xFF03202B),
+    primaryContainer: Color(0xFF0B2E3C),
+    onPrimaryContainer: Color(0xFFD3F1FD),
+    accent: Color(0xFFFFB877),
+    onAccent: Color(0xFF2A1204),
+    accentContainer: Color(0xFF331C0C),
+    onAccentContainer: Color(0xFFFFE2C8),
+    open: Color(0xFFFFB877),
+    closed: Color(0xFFB0B0C2),
+    warning: Color(0xFFFFCC7A),
+    error: Color(0xFFFF97A3),
+    skeleton: Color(0xFF1A1A22),
   );
 
   static const AppColors lightHighContrast = AppColors(
     brightness: Brightness.light,
     bgBase: Color(0xFFFFFFFF),
-    bgGrouped: Color(0xFFEDEDEE),
+    bgGrouped: Color(0xFFEDEDF2),
     surface: Color(0xFFFFFFFF),
     surfaceRaised: Color(0xFFFFFFFF),
     label: Color(0xFF000000),
-    labelSecondary: Color(0xFF3A3A41),
-    labelTertiary: Color(0xFF5A5A62),
-    separator: Color(0xFFAEAEB5),
-    primary: Color(0xFF111113),
+    labelSecondary: Color(0xFF38384A),
+    labelTertiary: Color(0xFF55556A),
+    separator: Color(0xFFACACB8),
+    primary: Color(0xFF08536F),
     onPrimary: Color(0xFFFFFFFF),
-    primaryContainer: Color(0xFFF1F1F2),
-    onPrimaryContainer: Color(0xFF111113),
-    accent: Color(0xFF6B4508),
+    primaryContainer: Color(0xFFDDF1FA),
+    onPrimaryContainer: Color(0xFF042C3B),
+    accent: Color(0xFF7A3706),
     onAccent: Color(0xFFFFFFFF),
-    accentContainer: Color(0xFFFBEFD9),
-    onAccentContainer: Color(0xFF4A3005),
-    open: Color(0xFF6B4508),
-    closed: Color(0xFF8E2221),
+    accentContainer: Color(0xFFFBE7D5),
+    onAccentContainer: Color(0xFF441F04),
+    open: Color(0xFF7A3706),
+    closed: Color(0xFF55556A),
     warning: Color(0xFF6B4508),
-    error: Color(0xFF8E2221),
-    skeleton: Color(0xFFEAEAEC),
+    error: Color(0xFF8E1229),
+    skeleton: Color(0xFFEAEAEF),
   );
 
   /// Picks the variant matching the platform appearance and contrast settings.

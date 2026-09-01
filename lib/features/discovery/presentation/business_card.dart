@@ -382,9 +382,11 @@ class _RatingChip extends StatelessWidget {
 
 /// The badge the first, distance-ordered result earns.
 ///
-/// Inverted — white fill, black text — the same rule as selection, because
-/// "this one" is what both are saying. It sits on the imagery, so it stays a
-/// chip rather than bare text.
+/// Inverted — white fill, black text on the dark appearance — because "this
+/// one" is what it is saying. It takes that inversion from [AppColors.label]
+/// rather than from [AppColors.primary]: primary now means *tappable*, and this
+/// badge is a statement of fact, not a control. It sits on the imagery, so it
+/// stays a chip rather than bare text.
 class _ClosestBadge extends StatelessWidget {
   const _ClosestBadge();
 
@@ -398,7 +400,7 @@ class _ClosestBadge extends StatelessWidget {
         vertical: AppSpacing.xs + 1,
       ),
       decoration: BoxDecoration(
-        color: colors.primary,
+        color: colors.label,
         borderRadius: BorderRadius.circular(AppRadius.xs),
       ),
       child: Text(
@@ -407,7 +409,7 @@ class _ClosestBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         semanticsLabel: 'Closest to you',
         style: context.type.caption.copyWith(
-          color: colors.onPrimary,
+          color: colors.bgBase,
           fontWeight: AppTypography.semibold,
           letterSpacing: 1.1,
         ),

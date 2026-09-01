@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_gradients.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../theme/identity_palette.dart';
@@ -38,7 +39,9 @@ class NearbyMark extends StatelessWidget {
       height: size,
       child: CustomPaint(
         painter: _NearbyMarkPainter(
-          color: color ?? context.colors.primary,
+          // No explicit colour means the mark is speaking for the brand, so it
+          // is painted in the icon's own spectrum rather than a flat fill.
+          color: color,
           showArc: showArc && size >= 20,
         ),
       ),
@@ -49,7 +52,11 @@ class NearbyMark extends StatelessWidget {
 class _NearbyMarkPainter extends CustomPainter {
   const _NearbyMarkPainter({required this.color, required this.showArc});
 
-  final Color color;
+  /// Null paints the mark with [AppGradients.brand] — the icon's sweep from
+  /// cyan through to orange. A value paints it flat instead, for the places
+  /// that need the mark in a single ink: a disabled state, or a glyph small
+  /// enough that a four-stop gradient would turn to mud.
+  final Color? color;
   final bool showArc;
 
   @override
@@ -106,9 +113,29 @@ class _NearbyMarkPainter extends CustomPainter {
         ),
       );
 
+    // One shader spans the whole mark, so the pin and the arc are two windows
+    // onto a single sweep rather than two separately-coloured shapes.
+    final bounds = Offset.zero & size;
+    Paint ink(double opacity) {
+      final flat = color;
+      if (flat != null) {
+        return Paint()..color = flat.withValues(alpha: flat.a * opacity);
+      }
+      return Paint()
+        ..shader = LinearGradient(
+          begin: AppGradients.brand.begin,
+          end: AppGradients.brand.end,
+          stops: AppGradients.brand.stops,
+          colors: [
+            for (final stop in AppGradients.brand.colors)
+              stop.withValues(alpha: opacity),
+          ],
+        ).createShader(bounds);
+    }
+
     canvas.drawPath(
       Path.combine(PathOperation.difference, pin, void_),
-      Paint()..color = color,
+      ink(1),
     );
 
     if (!showArc) return;
@@ -123,8 +150,7 @@ class _NearbyMarkPainter extends CustomPainter {
       -math.pi * 0.34,
       math.pi * 0.62,
       false,
-      Paint()
-        ..color = color.withValues(alpha: 0.42)
+      ink(0.42)
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round,
@@ -163,7 +189,7 @@ class NearbyWordmark extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            NearbyMark(size: fontSize * 0.82, color: context.colors.primary),
+            NearbyMark(size: fontSize * 0.82),
             SizedBox(width: fontSize * 0.20),
             Text(
               // Set in capitals with wide tracking, masthead-style. At this

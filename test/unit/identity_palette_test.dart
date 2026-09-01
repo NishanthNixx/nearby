@@ -30,6 +30,25 @@ void main() {
         [r, g, b].reduce((a, x) => a < x ? a : x);
   }
 
+  /// Hue in degrees, 0–360. Used to prove the ten identities actually walk the
+  /// colour circle instead of bunching up in one corner of it.
+  double hue(Color color) {
+    final r = color.r, g = color.g, b = color.b;
+    final max = [r, g, b].reduce(math.max);
+    final min = [r, g, b].reduce(math.min);
+    final d = max - min;
+    if (d == 0) return 0;
+    final double h;
+    if (max == r) {
+      h = 60 * (((g - b) / d) % 6);
+    } else if (max == g) {
+      h = 60 * ((b - r) / d + 2);
+    } else {
+      h = 60 * ((r - g) / d + 4);
+    }
+    return h < 0 ? h + 360 : h;
+  }
+
   double contrast(Color a, Color b) {
     final la = luminance(a);
     final lb = luminance(b);
@@ -120,41 +139,44 @@ void main() {
     });
 
     for (final brightness in Brightness.values) {
-      test('every ${brightness.name} identity is neutral, not coloured', () {
-        // The app permits exactly one hue — gold, for ratings and open-now. Ten
-        // coloured avatars would be the loudest thing on a black-and-white
-        // screen. Identities differentiate by value; this is the guard that
-        // stops a hue creeping back in.
+      test('every ${brightness.name} identity is genuinely coloured', () {
+        // The inverse of the guard this file used to carry. The palette is now
+        // a spectrum walk, and a stop that drifts back toward grey would be
+        // invisible among nine saturated neighbours — so weak chroma is the
+        // failure, not strong chroma.
         for (var i = 0; i < 200; i++) {
           final identity = IdentityPalette.forSeed('seed-$i', brightness);
           for (final stop in [identity.from, identity.to]) {
             expect(
               chroma(stop),
-              lessThanOrEqualTo(12),
+              greaterThanOrEqualTo(80),
               reason:
                   'identity stop #${stop.toARGB32().toRadixString(16)} has '
-                  'chroma ${chroma(stop)} — that reads as a colour, not a grey',
+                  'chroma ${chroma(stop)} — that reads as a grey, not a colour',
             );
           }
         }
       });
 
-      test('${brightness.name} identities span a usable value range', () {
-        // Value is the only thing distinguishing them now, so the ladder has to
-        // actually spread rather than clustering on one tone.
-        final luminances =
+      test('${brightness.name} identities span the hue circle', () {
+        // Hue is what distinguishes them now, so the ten stops have to actually
+        // walk the circle rather than clustering in one corner of it. Ten
+        // well-spread hues average 36 degrees apart; requiring a 180 degree
+        // total span leaves room to retune individual stops without this
+        // becoming a change-detector test.
+        final hues =
             [for (var i = 0; i < 10; i++) 'seed-$i']
                 .map((s) => IdentityPalette.forSeed(s, brightness))
-                .map((g) => luminance(g.from))
+                .map((g) => hue(g.from))
                 .toSet()
                 .toList()
               ..sort();
 
-        expect(luminances.length, greaterThan(3));
+        expect(hues.length, greaterThan(3));
         expect(
-          luminances.last - luminances.first,
-          greaterThan(0.02),
-          reason: 'identities that share a value are indistinguishable',
+          hues.last - hues.first,
+          greaterThan(180),
+          reason: 'identities crowded into one hue are hard to tell apart',
         );
       });
     }

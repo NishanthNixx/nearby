@@ -192,9 +192,13 @@ abstract final class AppTheme {
         ),
       ),
 
+      // A text button has no fill and no border, so colour is its only
+      // affordance — it takes [primary] rather than [label]. Outlined buttons
+      // keep the neutral label colour, because their border already says
+      // "control" without spending the interactive hue on them.
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: c.label,
+          foregroundColor: c.primary,
           disabledForegroundColor: c.labelTertiary,
           minimumSize: const Size(
             AppSizing.minTouchTarget,

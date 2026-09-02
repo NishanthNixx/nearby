@@ -43,6 +43,23 @@ abstract final class AppGradients {
     colors: [cyan, indigo],
   );
 
+  /// Ink for text sitting on [action]. Measured 5.19:1 against every point of
+  /// that gradient — the worst case, not the endpoints.
+  static const Color onAction = Color(0xFF1F0714);
+
+  /// The hero action's fill.
+  ///
+  /// This is the warm half, NOT the full sweep, and that is a measured
+  /// constraint rather than a preference: [brand] spans 3.55:1 in luminance
+  /// from cyan to indigo, so no single ink clears 4.5:1 across all of it — the
+  /// best possible ink still bottoms out at 2.79:1. The warm half spans only
+  /// 1.68:1, which is narrow enough to carry a label safely.
+  static const LinearGradient action = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [magenta, orange],
+  );
+
   /// The expressive half — hero panels and empty-state art.
   static const LinearGradient warm = LinearGradient(
     begin: Alignment.topLeft,

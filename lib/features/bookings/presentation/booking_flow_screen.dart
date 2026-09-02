@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/di/providers.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_gradients.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
@@ -239,16 +240,29 @@ class _StepProgress extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
+          // The step bar is the one element guaranteed to be on screen before
+          // anything is selected, so it carries the spectrum: the filled length
+          // sweeps the full icon ramp, putting a cool and a warm hue on the
+          // screen even while the CTA is still disabled and grey.
+          //
+          // It can take the FULL sweep where the CTA cannot, because nothing is
+          // written on it — the 3.55:1 luminance span that makes the sweep
+          // unusable behind a label is irrelevant to a bare 4pt rule.
           ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.pill),
-            child: LinearProgressIndicator(
-              value: _current / _total,
-              minHeight: _barHeight,
-              // White fill on a separator-grey track: progress is the same
-              // "this is the way forward" white as the CTA, and the track is
-              // the quietest neutral in the palette.
-              backgroundColor: colors.separator,
-              color: colors.primary,
+            child: ColoredBox(
+              color: colors.separator,
+              child: SizedBox(
+                height: _barHeight,
+                width: double.infinity,
+                child: FractionallySizedBox(
+                  alignment: AlignmentDirectional.centerStart,
+                  widthFactor: _current / _total,
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(gradient: AppGradients.brand),
+                  ),
+                ),
+              ),
             ),
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_gradients.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 
@@ -123,15 +124,18 @@ class PrimaryCtaBar extends StatelessWidget {
                     flex: secondaryLabel == null ? 1 : 2,
                     child: SizedBox(
                       height: AppSizing.primaryButtonHeight,
-                      child: FilledButton(
+                      child: _SpectrumPill(
+                        enabled: !isBusy && onPressed != null,
+                        child: FilledButton(
+                        style: _spectrumStyle,
                         onPressed: isBusy ? null : onPressed,
                         child: isBusy
-                            ? SizedBox(
+                            ? const SizedBox(
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.2,
-                                  color: colors.onPrimary,
+                                  color: AppGradients.onAction,
                                 ),
                               )
                             : Row(
@@ -150,6 +154,7 @@ class PrimaryCtaBar extends StatelessWidget {
                                   ),
                                 ],
                               ),
+                        ),
                       ),
                     ),
                   ),
@@ -188,15 +193,18 @@ class PrimaryButton extends StatelessWidget {
         minWidth: double.infinity,
         minHeight: AppSizing.primaryButtonHeight,
       ),
-      child: FilledButton(
+      child: _SpectrumPill(
+        enabled: !isBusy && onPressed != null,
+        child: FilledButton(
+        style: _spectrumStyle,
         onPressed: isBusy ? null : onPressed,
         child: isBusy
-            ? SizedBox(
+            ? const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.2,
-                  color: context.colors.onPrimary,
+                  color: AppGradients.onAction,
                 ),
               )
             : Row(
@@ -209,7 +217,48 @@ class PrimaryButton extends StatelessWidget {
                   Text(label),
                 ],
               ),
+        ),
       ),
     );
   }
 }
+
+/// The hero action's fill: the icon's warm half, painted opaque on the pill.
+///
+/// Opaque is the point. Colour placed in dim background fields measures out as
+/// near-black on this ground — four "aurora" hues resolved to #0B1118, #0A0C1B,
+/// #120B13 and #171010 when checked. The spectrum only reads if it sits in a
+/// large, saturated, foreground surface, so it goes on the button the eye is
+/// already looking for.
+///
+/// Disabled drops the gradient entirely rather than fading it: a washed-out
+/// gradient still reads as decoration, where a flat raised surface reads as
+/// unavailable.
+class _SpectrumPill extends StatelessWidget {
+  const _SpectrumPill({required this.enabled, required this.child});
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: enabled ? AppGradients.action : null,
+        color: enabled ? null : context.colors.surfaceRaised,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Makes the button itself transparent so [_SpectrumPill]'s gradient shows
+/// through, and pins the label to the ink measured against that gradient.
+final ButtonStyle _spectrumStyle = FilledButton.styleFrom(
+  backgroundColor: Colors.transparent,
+  disabledBackgroundColor: Colors.transparent,
+  foregroundColor: AppGradients.onAction,
+  shadowColor: Colors.transparent,
+  elevation: 0,
+);

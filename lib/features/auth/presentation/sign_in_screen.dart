@@ -96,10 +96,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               const SizedBox(height: AppSpacing.xxl),
               const NearbyWordmark(fontSize: 36),
               const SizedBox(height: AppSpacing.lg),
-              // The one full-spectrum element on a screen that is otherwise
-              // type and form fields. Full-bleed under the wordmark, so it
-              // reads as a brand bar rather than a stray accent.
-              const SpectrumRule(height: 5),
+              // The icon's dashed arc, straightened into a brand bar under
+              // the wordmark.
+              const BrandRule(),
               const SizedBox(height: AppSpacing.xl),
               Text(
                 'Welcome back',

@@ -241,13 +241,11 @@ class _StepProgress extends StatelessWidget implements PreferredSizeWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           // The step bar is the one element guaranteed to be on screen before
-          // anything is selected, so it carries the spectrum: the filled length
-          // sweeps the full icon ramp, putting a cool and a warm hue on the
-          // screen even while the CTA is still disabled and grey.
+          // anything is selected, so it carries the brand's colour while the
+          // CTA is still disabled and grey.
           //
-          // It can take the FULL sweep where the CTA cannot, because nothing is
-          // written on it — the 3.55:1 luminance span that makes the sweep
-          // unusable behind a label is irrelevant to a bare 4pt rule.
+          // It takes the same leather ramp as the CTA, so progress and the
+          // action it leads to are visibly the same material.
           ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.pill),
             child: ColoredBox(
@@ -259,7 +257,7 @@ class _StepProgress extends StatelessWidget implements PreferredSizeWidget {
                   alignment: AlignmentDirectional.centerStart,
                   widthFactor: _current / _total,
                   child: const DecoratedBox(
-                    decoration: BoxDecoration(gradient: AppGradients.brand),
+                    decoration: BoxDecoration(gradient: AppGradients.action),
                   ),
                 ),
               ),

@@ -27,9 +27,14 @@ class NearbyMark extends StatelessWidget {
   });
 
   final double size;
+
+  /// Collapses the mark to a single ink. Null keeps the icon's two browns —
+  /// a deep brown letterform with a lighter pin — which is what makes the pin
+  /// read as a separate object rather than part of the "n".
   final Color? color;
 
-  /// The proximity arc. Dropped at very small sizes where it turns to mush.
+  /// The dashed proximity arc. Dropped at very small sizes, where six dashes
+  /// turn into a smudge.
   final bool showArc;
 
   @override
@@ -39,127 +44,171 @@ class NearbyMark extends StatelessWidget {
       height: size,
       child: CustomPaint(
         painter: _NearbyMarkPainter(
-          // No explicit colour means the mark is speaking for the brand, so it
-          // is painted in the icon's own spectrum rather than a flat fill.
-          color: color,
-          showArc: showArc && size >= 20,
+          ink: color ?? AppGradients.chocolate,
+          pin: color ?? context.colors.primary,
+          showArc: showArc && size >= 32,
         ),
       ),
     );
   }
 }
 
+/// Draws the app icon's mark: a lowercase "n" whose right leg tapers into a
+/// swash, a dashed arc sweeping off its shoulder, and a map pin the arc points
+/// at.
+///
+/// Coded rather than shipped as a raster because the mark appears at a dozen
+/// sizes — inline in a text run, in the header, on the splash — and a single
+/// PNG cannot serve all of them crisply. Geometry is expressed against a
+/// 100-unit square and scaled, so proportions hold at any size.
 class _NearbyMarkPainter extends CustomPainter {
-  const _NearbyMarkPainter({required this.color, required this.showArc});
+  const _NearbyMarkPainter({
+    required this.ink,
+    required this.pin,
+    required this.showArc,
+  });
 
-  /// Null paints the mark with [AppGradients.brand] — the icon's sweep from
-  /// cyan through to orange. A value paints it flat instead, for the places
-  /// that need the mark in a single ink: a disabled state, or a glyph small
-  /// enough that a four-stop gradient would turn to mud.
-  final Color? color;
+  final Color ink;
+  final Color pin;
   final bool showArc;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
+    final u = size.width / 100;
 
-    // The pin occupies the upper-left ~72%, leaving room for the arc to sweep
-    // out to the lower right without the two shapes colliding.
-    final pinWidth = w * 0.60;
-    final pinHeight = h * 0.78;
-    final left = w * 0.04;
-    final top = h * 0.05;
+    Paint solid(Color c) => Paint()
+      ..color = c
+      ..isAntiAlias = true;
 
-    final centreX = left + pinWidth / 2;
-    final headRadius = pinWidth / 2;
-    final headCentreY = top + headRadius;
+    Paint bar(Color c, double weight, {StrokeCap cap = StrokeCap.round}) =>
+        Paint()
+          ..color = c
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = weight * u
+          ..strokeCap = cap
+          ..isAntiAlias = true;
 
-    // Teardrop: a circle for the head, with two curves drawn down to the point.
-    final pin = Path();
-    final tipY = top + pinHeight;
+    // --- The "n" ------------------------------------------------------------
+    // Drawn as ONE continuous stroke — stem up, shoulder over, leg down — with
+    // round joins. Three separate primitives left a visible seam where the arc
+    // butted into the stem, because a butt cap and a round cap cannot meet
+    // cleanly at a tangent.
+    const weight = 10.5;
+    const stemX = 30.0;
+    const legX = 55.0;
+    const shoulderY = 38.0;
+    const baseline = 71.0;
+    const legFoot = 55.0;
 
-    pin.moveTo(centreX, tipY);
-    pin.cubicTo(
-      centreX - headRadius * 0.92,
-      headCentreY + headRadius * 0.72,
-      centreX - headRadius,
-      headCentreY + headRadius * 0.18,
-      centreX - headRadius,
-      headCentreY,
-    );
-    pin.arcToPoint(
-      Offset(centreX + headRadius, headCentreY),
-      radius: Radius.circular(headRadius),
-      clockwise: true,
-    );
-    pin.cubicTo(
-      centreX + headRadius,
-      headCentreY + headRadius * 0.18,
-      centreX + headRadius * 0.92,
-      headCentreY + headRadius * 0.72,
-      centreX,
-      tipY,
-    );
-    pin.close();
-
-    // The void: knocked out of the pin rather than painted over it, so the mark
-    // works on any background.
-    final void_ = Path()
-      ..addOval(
-        Rect.fromCircle(
-          center: Offset(centreX, headCentreY),
-          radius: headRadius * 0.36,
-        ),
-      );
-
-    // One shader spans the whole mark, so the pin and the arc are two windows
-    // onto a single sweep rather than two separately-coloured shapes.
-    final bounds = Offset.zero & size;
-    Paint ink(double opacity) {
-      final flat = color;
-      if (flat != null) {
-        return Paint()..color = flat.withValues(alpha: flat.a * opacity);
-      }
-      return Paint()
-        ..shader = LinearGradient(
-          begin: AppGradients.brand.begin,
-          end: AppGradients.brand.end,
-          stops: AppGradients.brand.stops,
-          colors: [
-            for (final stop in AppGradients.brand.colors)
-              stop.withValues(alpha: opacity),
-          ],
-        ).createShader(bounds);
-    }
+    final letter = Path()
+      ..moveTo(stemX * u, baseline * u)
+      ..lineTo(stemX * u, shoulderY * u)
+      ..arcToPoint(
+        Offset(legX * u, shoulderY * u),
+        radius: Radius.circular(((legX - stemX) / 2) * u),
+        clockwise: true,
+      )
+      ..lineTo(legX * u, legFoot * u);
 
     canvas.drawPath(
-      Path.combine(PathOperation.difference, pin, void_),
-      ink(1),
+      letter,
+      bar(ink, weight)..strokeJoin = StrokeJoin.round,
+    );
+
+    // The swash: the leg keeps going and hooks down-LEFT, narrowing to a
+    // point. A filled path rather than a stroke, because a stroke cannot
+    // taper.
+    const half = weight / 2;
+    final swash = Path()
+      ..moveTo((legX - half) * u, (legFoot - 4) * u)
+      ..cubicTo(
+        (legX - half) * u,
+        70 * u,
+        (legX - half - 2) * u,
+        78 * u,
+        (legX - 9) * u,
+        83 * u,
+      )
+      ..cubicTo(
+        (legX - 1) * u,
+        79 * u,
+        (legX + half) * u,
+        70 * u,
+        (legX + half) * u,
+        (legFoot - 4) * u,
+      )
+      ..close();
+    canvas.drawPath(swash, solid(ink));
+
+    // --- The pin ------------------------------------------------------------
+    // A teardrop with the hole knocked OUT rather than painted over, so the
+    // mark survives on any background.
+    const pinCx = 72.0;
+    const pinCy = 66.0;
+    const pinR = 10.0;
+    const tipY = 84.0;
+
+    final head = Path()
+      ..addOval(
+        Rect.fromCircle(center: Offset(pinCx * u, pinCy * u), radius: pinR * u),
+      );
+    final point = Path()
+      ..moveTo((pinCx - pinR * 0.82) * u, (pinCy + pinR * 0.58) * u)
+      ..quadraticBezierTo(
+        (pinCx - pinR * 0.30) * u,
+        (tipY - 2) * u,
+        pinCx * u,
+        tipY * u,
+      )
+      ..quadraticBezierTo(
+        (pinCx + pinR * 0.30) * u,
+        (tipY - 2) * u,
+        (pinCx + pinR * 0.82) * u,
+        (pinCy + pinR * 0.58) * u,
+      )
+      ..close();
+
+    final body = Path.combine(PathOperation.union, head, point);
+    final hole = Path()
+      ..addOval(
+        Rect.fromCircle(
+          center: Offset(pinCx * u, pinCy * u),
+          radius: pinR * 0.38 * u,
+        ),
+      );
+    canvas.drawPath(
+      Path.combine(PathOperation.difference, body, hole),
+      solid(pin),
     );
 
     if (!showArc) return;
 
-    // Proximity arc, sweeping around the pin's lower right.
-    final strokeWidth = math.max(1.4, w * 0.075);
-    canvas.drawArc(
-      Rect.fromCircle(
-        center: Offset(centreX, headCentreY + headRadius * 0.35),
-        radius: w * 0.44,
-      ),
-      -math.pi * 0.34,
-      math.pi * 0.62,
-      false,
-      ink(0.42)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round,
-    );
+    // --- The dashed arc -----------------------------------------------------
+    // Sampled off a single curve with PathMetrics, so the dashes stay evenly
+    // spaced along it at any size instead of drifting apart as the mark grows.
+    final sweep = Path()
+      ..moveTo(46 * u, 13 * u)
+      ..cubicTo(71 * u, 13 * u, 86 * u, 29 * u, 83 * u, 52 * u);
+
+    final metric = sweep.computeMetrics().first;
+    const dashes = 6;
+    final step = metric.length / (dashes * 2 - 1);
+    final dashPaint = bar(ink, weight * 0.40);
+
+    for (var i = 0; i < dashes; i++) {
+      final start = i * step * 2;
+      canvas.drawPath(
+        metric.extractPath(start, math.min(start + step, metric.length)),
+        dashPaint,
+      );
+    }
   }
 
   @override
   bool shouldRepaint(_NearbyMarkPainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.showArc != showArc;
+      oldDelegate.ink != ink ||
+      oldDelegate.pin != pin ||
+      oldDelegate.showArc != showArc;
 }
 
 /// The wordmark: the pin plus "Nearby", for the header and the splash.
@@ -501,50 +550,86 @@ class BusinessBanner extends StatelessWidget {
   }
 }
 
-/// A short gradient rule carrying the icon's full spectrum.
+/// A dashed rule in the brand's brown — the icon's arc, straightened.
 ///
-/// This is the app's one place to show all four hues at once. It exists because
-/// the semantic palette deliberately cannot: only indigo is dark enough to be a
-/// text-bearing fill, so screens made mostly of type and controls come out
-/// indigo-and-paper. A screen that is all form — sign-in, an empty state —
-/// would otherwise carry none of the brand's colour at all.
+/// It replaced a full-spectrum gradient bar, which stopped being the brand the
+/// moment the icon became beige and two browns. The dashes are the point: the
+/// icon's one piece of ornament is a dashed arc sweeping from the letterform to
+/// the pin, so a dashed rule reads as the same hand rather than as a generic
+/// divider.
 ///
-/// It is DECORATIVE and never carries text. That is what lets it use the full
-/// ramp: the sweep spans 3.55:1 in luminance, so no ink clears 4.5:1 across it
-/// (the best possible ink bottoms out at 2.94:1), which rules it out anywhere a
-/// label sits on top. As a bare rule that constraint does not apply.
-///
-/// Design guideline — Color > Best practices: it is excluded from the
-/// accessibility tree, because a decorative rule announcing itself to a screen
-/// reader is noise.
-class SpectrumRule extends StatelessWidget {
-  const SpectrumRule({super.key, this.width, this.height = 6});
+/// Decorative, and excluded from the accessibility tree — a rule announcing
+/// itself to a screen reader is noise.
+class BrandRule extends StatelessWidget {
+  const BrandRule({super.key, this.width, this.height = 3, this.dashes = 20});
 
-  /// Null spans the full width offered by the parent — the right choice under
-  /// a wordmark, where a full-bleed rule reads as a brand bar. A value centres
-  /// a rule of that width instead.
+  /// Null spans the full width the parent offers, which is what a rule under a
+  /// wordmark wants. A value centres a rule of that width instead.
   ///
-  /// The distinction has to be explicit because a bare `width:` cannot be
-  /// trusted here: a ListView hands its children TIGHT width constraints, so a
-  /// Container's own width is silently ignored inside one. Passing a width now
-  /// centres the rule in a SizedBox, which holds in both parents.
+  /// The distinction is explicit because a bare `width:` cannot be trusted: a
+  /// ListView hands children TIGHT width constraints and silently ignores a
+  /// child's own width.
   final double? width;
 
   final double height;
+  final int dashes;
 
   @override
   Widget build(BuildContext context) {
-    final bar = Container(
+    final rule = SizedBox(
       width: width ?? double.infinity,
       height: height,
-      decoration: BoxDecoration(
-        gradient: AppGradients.brand,
-        borderRadius: BorderRadius.circular(height / 2),
+      child: CustomPaint(
+        painter: _DashedRulePainter(
+          color: context.colors.primary,
+          dashes: dashes,
+        ),
       ),
     );
 
     return ExcludeSemantics(
-      child: width == null ? bar : Center(child: bar),
+      child: width == null ? rule : Center(child: rule),
     );
   }
+}
+
+class _DashedRulePainter extends CustomPainter {
+  const _DashedRulePainter({required this.color, required this.dashes});
+
+  final Color color;
+  final int dashes;
+
+  /// Gap as a fraction of dash length. Matches the icon's arc, where the gaps
+  /// are a little shorter than the dashes.
+  static const _gapRatio = 0.7;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Solve for a dash length that lands the last dash exactly on the right
+    // edge, so the rule never ends on a half-gap.
+    final dash = size.width / (dashes + (dashes - 1) * _gapRatio);
+    final stride = dash * (1 + _gapRatio);
+    final y = size.height / 2;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.height
+      ..strokeCap = StrokeCap.round
+      ..isAntiAlias = true;
+
+    for (var i = 0; i < dashes; i++) {
+      final x = i * stride;
+      // Inset by half the cap so the round ends stay inside the box.
+      canvas.drawLine(
+        Offset(x + y, y),
+        Offset(x + dash - y, y),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedRulePainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.dashes != dashes;
 }

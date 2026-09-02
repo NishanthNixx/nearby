@@ -477,10 +477,14 @@ class _LocationNotice extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
+      // Opaque fill plus a full-strength hairline. The alpha wash this
+      // replaces composited to #EDE2D2 over the bone ground — 1.15:1, which
+      // is no panel at all. The fill alone is only 1.09:1, so the hairline is
+      // what makes the shape findable; the ink carries the meaning at 6.53:1.
       decoration: BoxDecoration(
-        color: colors.warning.withValues(alpha: 0.1),
+        color: colors.warningContainer,
         borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: colors.warning.withValues(alpha: 0.3)),
+        border: Border.all(color: colors.warning),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -737,10 +741,11 @@ class _LocationPill extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: hasProblem
-            ? colors.warning.withValues(alpha: 0.10)
-            : colors.primaryContainer,
+        color: hasProblem ? colors.warningContainer : colors.primaryContainer,
         borderRadius: BorderRadius.circular(AppRadius.pill),
+        // The healthy pill is a tint of primary and needs no outline; the
+        // problem pill is a near-ground peach and would vanish without one.
+        border: hasProblem ? Border.all(color: colors.warning) : null,
       ),
       child: content,
     );

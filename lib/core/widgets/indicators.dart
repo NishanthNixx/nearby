@@ -21,7 +21,7 @@ class StatusPill extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.color,
-    this.background,
+    required this.background,
     this.semanticsLabel,
   });
 
@@ -43,7 +43,7 @@ class StatusPill extends StatelessWidget {
     return StatusPill(
       key: key,
       // Uppercase, in the reference's manner — this and the rating are the two
-      // places the gold appears.
+      // places the warm accent appears on a card.
       label: isOpen ? 'OPEN NOW' : 'CLOSED',
       semanticsLabel: isOpen ? 'Open now' : 'Closed',
       icon: isOpen ? Icons.schedule_rounded : Icons.schedule_outlined,
@@ -61,10 +61,10 @@ class StatusPill extends StatelessWidget {
     required BuildContext context,
   }) {
     final colors = context.colors;
-    // Monochrome discipline: gold marks the one state that is waiting on
-    // someone, white marks good standing, and only cancelled gets the failure
-    // colour. Icons and labels differ throughout, so no state leans on colour
-    // alone.
+    // Warm marks the one state waiting on someone, neutral marks good
+    // standing, and only cancelled takes the failure colour. Interactive
+    // indigo appears nowhere here — a status is a fact, not a control. Icons
+    // and labels differ throughout, so no state leans on colour alone.
     final (color, icon) = switch (status) {
       BookingStatus.pending => (colors.warning, Icons.hourglass_top_rounded),
       BookingStatus.confirmed => (
@@ -93,12 +93,16 @@ class StatusPill extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
-  final Color? background;
+  final Color background;
   final String? semanticsLabel;
 
   @override
   Widget build(BuildContext context) {
-    final resolvedBackground = background ?? color.withValues(alpha: 0.12);
+    // No alpha fallback. A tint of the status colour at 12% composited to a
+    // colourless sludge over a warm ground, so every caller states its own
+    // opaque fill (or Colors.transparent for bare text) and this widget never
+    // invents one.
+    final resolvedBackground = background;
 
     return Semantics(
       label: semanticsLabel ?? label,

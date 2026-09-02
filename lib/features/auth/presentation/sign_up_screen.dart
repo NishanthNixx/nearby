@@ -282,7 +282,7 @@ class _RoleCard extends StatelessWidget {
         // A softened version of the inverted ink, not one of the grey tokens:
         // the greys are tuned against the near-black ground and wash out on a
         // white fill. At this alpha the footnote still clears 4.5:1.
-        ? colors.onPrimary.withValues(alpha: 0.66)
+        ? colors.onPrimary.withValues(alpha: 0.8)
         : colors.labelSecondary;
 
     return NearbyCard(

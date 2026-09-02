@@ -348,7 +348,7 @@ class _ServiceStep extends StatelessWidget {
         // exists in the scheme.
         final foreground = isSelected ? colors.onPrimary : colors.label;
         final supporting = isSelected
-            ? colors.onPrimary.withValues(alpha: 0.7)
+            ? colors.onPrimary.withValues(alpha: 0.8)
             : colors.labelSecondary;
 
         return NearbyCard(
@@ -620,8 +620,12 @@ class _DateCell extends StatelessWidget {
     // the primary button, so "chosen" always looks the same everywhere.
     // Unselected cells are plain surface with no border: value, not outline,
     // separates them from the near-black ground.
+    // 0.80, not 0.70: on the indigo fill a 70% white measures 4.31:1 and APCA
+    // Lc 54.8, under both the 4.5:1 and Lc 60 floors for small text. 80% gives
+    // 5.16:1 / Lc 65.7. The old value was safe against the previous pale fill
+    // and quietly stopped being safe when primary went dark.
     final secondary = isSelected
-        ? colors.onPrimary.withValues(alpha: 0.7)
+        ? colors.onPrimary.withValues(alpha: 0.8)
         : colors.labelSecondary;
 
     return Semantics(

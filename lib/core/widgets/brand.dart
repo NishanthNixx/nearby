@@ -500,3 +500,51 @@ class BusinessBanner extends StatelessWidget {
     );
   }
 }
+
+/// A short gradient rule carrying the icon's full spectrum.
+///
+/// This is the app's one place to show all four hues at once. It exists because
+/// the semantic palette deliberately cannot: only indigo is dark enough to be a
+/// text-bearing fill, so screens made mostly of type and controls come out
+/// indigo-and-paper. A screen that is all form — sign-in, an empty state —
+/// would otherwise carry none of the brand's colour at all.
+///
+/// It is DECORATIVE and never carries text. That is what lets it use the full
+/// ramp: the sweep spans 3.55:1 in luminance, so no ink clears 4.5:1 across it
+/// (the best possible ink bottoms out at 2.94:1), which rules it out anywhere a
+/// label sits on top. As a bare rule that constraint does not apply.
+///
+/// Design guideline — Color > Best practices: it is excluded from the
+/// accessibility tree, because a decorative rule announcing itself to a screen
+/// reader is noise.
+class SpectrumRule extends StatelessWidget {
+  const SpectrumRule({super.key, this.width, this.height = 6});
+
+  /// Null spans the full width offered by the parent — the right choice under
+  /// a wordmark, where a full-bleed rule reads as a brand bar. A value centres
+  /// a rule of that width instead.
+  ///
+  /// The distinction has to be explicit because a bare `width:` cannot be
+  /// trusted here: a ListView hands its children TIGHT width constraints, so a
+  /// Container's own width is silently ignored inside one. Passing a width now
+  /// centres the rule in a SizedBox, which holds in both parents.
+  final double? width;
+
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final bar = Container(
+      width: width ?? double.infinity,
+      height: height,
+      decoration: BoxDecoration(
+        gradient: AppGradients.brand,
+        borderRadius: BorderRadius.circular(height / 2),
+      ),
+    );
+
+    return ExcludeSemantics(
+      child: width == null ? bar : Center(child: bar),
+    );
+  }
+}

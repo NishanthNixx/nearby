@@ -12,7 +12,8 @@ import '../theme/app_colors.dart';
 /// are where a customer forms their impression of whether the app works.
 ///
 /// Design guideline — Layout > Best practices: essential information gets
-/// space. These are deliberately calm and monochromatic-plus-one-accent, so they
+/// space. These are deliberately calm — a neutral line drawing carrying a cool
+/// and a warm accent, so an empty screen is never a single hue — so they
 /// support the message rather than competing with it.
 enum NearbyIllustration {
   /// No tailors within the radius. A search circle with the pin at its centre
@@ -277,18 +278,26 @@ class _IllustrationPainter extends CustomPainter {
       stroke(line, 2.6),
     );
 
-    // A grid of days, with one slot marked open in the brand colour — the
-    // implication being that there is a time waiting to be taken.
+    // A grid of days with two slots marked open — the implication being that
+    // there are times waiting to be taken.
+    //
+    // The two markers take DIFFERENT hues, and that is the point: an empty
+    // state is nothing but type, one button and this drawing, so if the
+    // illustration is single-hue the whole screen is. Marks are dots, never
+    // labels, so both can be fully saturated.
     for (var row = 0; row < 3; row++) {
       for (var col = 0; col < 4; col++) {
         final cx = (28 + col * 15) * u;
         final cy = (52 + row * 12) * u;
-        final isOpen = row == 1 && col == 2;
-        canvas.drawCircle(
-          Offset(cx, cy),
-          3.4 * u,
-          isOpen ? fill(accent) : fill(faint),
-        );
+        final Paint paint;
+        if (row == 1 && col == 2) {
+          paint = fill(accent);
+        } else if (row == 2 && col == 0) {
+          paint = fill(warm);
+        } else {
+          paint = fill(faint);
+        }
+        canvas.drawCircle(Offset(cx, cy), 3.4 * u, paint);
       }
     }
   }

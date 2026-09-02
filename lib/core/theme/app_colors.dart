@@ -47,6 +47,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.open,
     required this.closed,
     required this.warning,
+    required this.warningContainer,
+    required this.onWarningContainer,
     required this.error,
     required this.skeleton,
   });
@@ -140,6 +142,17 @@ class AppColors extends ThemeExtension<AppColors> {
   /// Caution — a slot is nearly gone, a profile is incomplete.
   final Color warning;
 
+  /// Opaque panel fill for a caution notice, and its ink.
+  ///
+  /// Opaque is the whole point. The previous form was [warning] at 10% alpha,
+  /// which over the bone ground composited to #EDE2D2 — 1.15:1, a colourless
+  /// sludge. A low-alpha chromatic ink over a warm ground is the literal
+  /// mechanism of "muddy". These carry the panel instead, and because the fill
+  /// alone is only 1.09:1 against the ground, a caution panel always pairs it
+  /// with a [warning] hairline so the shape is findable.
+  final Color warningContainer;
+  final Color onWarningContainer;
+
   /// Something failed and the user must act.
   final Color error;
 
@@ -199,6 +212,8 @@ class AppColors extends ThemeExtension<AppColors> {
     open: Color(0xFFFF9440),
     closed: Color(0xFF8A8A9E),
     warning: Color(0xFFFFB443),
+    warningContainer: Color(0xFF3A2A0C),
+    onWarningContainer: Color(0xFFFFD98A),
     error: Color(0xFFFF6B7A),
     skeleton: Color(0xFF1A1A22),
   );
@@ -224,6 +239,8 @@ class AppColors extends ThemeExtension<AppColors> {
     open: Color(0xFFB93217),
     closed: Color(0xFF6B6255),
     warning: Color(0xFF8F5406),
+    warningContainer: Color(0xFFFBE7C6),
+    onWarningContainer: Color(0xFF7A4408),
     error: Color(0xFFB31239),
     skeleton: Color(0xFFE6DAC7),
   );
@@ -249,6 +266,8 @@ class AppColors extends ThemeExtension<AppColors> {
     open: Color(0xFFFFB877),
     closed: Color(0xFFB0B0C2),
     warning: Color(0xFFFFCC7A),
+    warningContainer: Color(0xFF33240A),
+    onWarningContainer: Color(0xFFFFE6B0),
     error: Color(0xFFFF97A3),
     skeleton: Color(0xFF1A1A22),
   );
@@ -274,6 +293,8 @@ class AppColors extends ThemeExtension<AppColors> {
     open: Color(0xFF9E2A11),
     closed: Color(0xFF554D42),
     warning: Color(0xFF7A4706),
+    warningContainer: Color(0xFFFBE7C6),
+    onWarningContainer: Color(0xFF5C3306),
     error: Color(0xFF99102F),
     skeleton: Color(0xFFE6DAC7),
   );
@@ -311,6 +332,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? open,
     Color? closed,
     Color? warning,
+    Color? warningContainer,
+    Color? onWarningContainer,
     Color? error,
     Color? skeleton,
   }) {
@@ -335,6 +358,8 @@ class AppColors extends ThemeExtension<AppColors> {
       open: open ?? this.open,
       closed: closed ?? this.closed,
       warning: warning ?? this.warning,
+      warningContainer: warningContainer ?? this.warningContainer,
+      onWarningContainer: onWarningContainer ?? this.onWarningContainer,
       error: error ?? this.error,
       skeleton: skeleton ?? this.skeleton,
     );
@@ -365,6 +390,8 @@ class AppColors extends ThemeExtension<AppColors> {
       open: c(open, other.open),
       closed: c(closed, other.closed),
       warning: c(warning, other.warning),
+      warningContainer: c(warningContainer, other.warningContainer),
+      onWarningContainer: c(onWarningContainer, other.onWarningContainer),
       error: c(error, other.error),
       skeleton: c(skeleton, other.skeleton),
     );

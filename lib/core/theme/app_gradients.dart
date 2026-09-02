@@ -43,32 +43,31 @@ abstract final class AppGradients {
     colors: [cyan, indigo],
   );
 
-  /// Ink for text sitting on [action]. White, at APCA Lc 88.8.
+  /// Ink for text sitting on [action]. White, at APCA Lc 91.7.
   static const Color onAction = Color(0xFFFFFFFF);
 
-  /// The hero action's fill — the icon's INDIGO end, not its warm end.
+  /// Cognac — the light end of the leather ramp.
+  static const Color cognac = Color(0xFF7A4420);
+
+  /// Chocolate — its dark end.
+  static const Color chocolate = Color(0xFF4A2C17);
+
+  /// The hero action's fill: polished leather.
   ///
-  /// This is a measured constraint, and it overturns the obvious choice. The
-  /// warm ramp cannot carry a label in either polarity:
+  /// Brown is a better CTA fill than any hue in the icon, for a structural
+  /// reason. A text-bearing fill has to be dark, and brown is NATIVELY dark —
+  /// so it reaches Lc 91.7 under white ink without being pushed anywhere it
+  /// does not want to go. The icon's own hues cannot: cyan and orange are too
+  /// light to carry a label at all, and the warm ramp had to be darkened until
+  /// its chroma collapsed from 174 to 121 before white ink would clear.
   ///
-  ///   magenta->orange + near-black ink   APCA Lc 40.1   (floor is 45)
-  ///   magenta->orange + pure black       APCA Lc 40.8   (the ceiling)
-  ///   magenta->orange + white ink        APCA Lc 47.5
-  ///
-  /// WCAG 2.x scores that same pill at 5.19:1 and calls it a pass, because
-  /// WCAG 2.x systematically overestimates contrast for saturated colour at
-  /// middling luminance — which is exactly what magenta and orange are.
-  /// Darkening the ramp until white ink clears Lc 75 collapses chroma from 174
-  /// to 121, i.e. plum and olive.
-  ///
-  /// Indigo is natively dark AND saturated, so it carries white ink at FULL
-  /// chroma: Lc 88.8, chroma 174. Of the icon's four hues only its dark end can
-  /// be a text-bearing fill; cyan and orange are too light, and belong in
-  /// containers and decoration instead.
+  /// It also belongs to the product. Beige and brown are the materials of a
+  /// tailor's shop — leather, thread, kraft paper — where an electric blue was
+  /// only ever a tech convention borrowed from elsewhere.
   static const LinearGradient action = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [indigo, Color(0xFF4A2CB8)],
+    colors: [cognac, chocolate],
   );
 
   /// The expressive half — hero panels and empty-state art.

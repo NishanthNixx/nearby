@@ -105,7 +105,9 @@ abstract final class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: c.bgBase,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: c.primaryContainer,
+        // A real fill, not a pale tint. primaryContainer measured 1.15:1
+        // against the ground — an indicator nobody can see.
+        indicatorColor: c.primary,
         elevation: 0,
         height: 64,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
@@ -122,7 +124,9 @@ abstract final class AppTheme {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(
             size: AppSizing.iconLg,
-            color: selected ? c.onPrimaryContainer : c.labelSecondary,
+            // The icon sits INSIDE the indigo pill; the label sits below it
+            // on the ground, so the two take different inks.
+            color: selected ? c.onPrimary : c.labelSecondary,
           );
         }),
       ),

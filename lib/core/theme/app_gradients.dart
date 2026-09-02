@@ -43,21 +43,32 @@ abstract final class AppGradients {
     colors: [cyan, indigo],
   );
 
-  /// Ink for text sitting on [action]. Measured 5.19:1 against every point of
-  /// that gradient — the worst case, not the endpoints.
-  static const Color onAction = Color(0xFF1F0714);
+  /// Ink for text sitting on [action]. White, at APCA Lc 88.8.
+  static const Color onAction = Color(0xFFFFFFFF);
 
-  /// The hero action's fill.
+  /// The hero action's fill — the icon's INDIGO end, not its warm end.
   ///
-  /// This is the warm half, NOT the full sweep, and that is a measured
-  /// constraint rather than a preference: [brand] spans 3.55:1 in luminance
-  /// from cyan to indigo, so no single ink clears 4.5:1 across all of it — the
-  /// best possible ink still bottoms out at 2.79:1. The warm half spans only
-  /// 1.68:1, which is narrow enough to carry a label safely.
+  /// This is a measured constraint, and it overturns the obvious choice. The
+  /// warm ramp cannot carry a label in either polarity:
+  ///
+  ///   magenta->orange + near-black ink   APCA Lc 40.1   (floor is 45)
+  ///   magenta->orange + pure black       APCA Lc 40.8   (the ceiling)
+  ///   magenta->orange + white ink        APCA Lc 47.5
+  ///
+  /// WCAG 2.x scores that same pill at 5.19:1 and calls it a pass, because
+  /// WCAG 2.x systematically overestimates contrast for saturated colour at
+  /// middling luminance — which is exactly what magenta and orange are.
+  /// Darkening the ramp until white ink clears Lc 75 collapses chroma from 174
+  /// to 121, i.e. plum and olive.
+  ///
+  /// Indigo is natively dark AND saturated, so it carries white ink at FULL
+  /// chroma: Lc 88.8, chroma 174. Of the icon's four hues only its dark end can
+  /// be a text-bearing fill; cyan and orange are too light, and belong in
+  /// containers and decoration instead.
   static const LinearGradient action = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [magenta, orange],
+    colors: [indigo, Color(0xFF4A2CB8)],
   );
 
   /// The expressive half — hero panels and empty-state art.

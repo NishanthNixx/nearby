@@ -593,6 +593,12 @@ class _DateStripState extends State<_DateStrip> {
 }
 
 /// One day in the strip: weekday on top, day number, month when it changes.
+/// Whether a date cell carries its light-mode hairline. Unselected cells in
+/// light need one because surface-white on the bone ground is only a 1.12:1
+/// value step; a selected cell is an indigo fill and needs no outline.
+bool _hasHairline(AppColors colors, bool isSelected) =>
+    colors.brightness == Brightness.light && !isSelected;
+
 class _DateCell extends StatelessWidget {
   const _DateCell({
     required this.date,
@@ -633,9 +639,15 @@ class _DateCell extends StatelessWidget {
           child: AnimatedContainer(
             duration: AppMotion.fast,
             width: _dateCellWidth(context),
-            padding: const EdgeInsets.symmetric(
+            // The hairline below is drawn INSIDE the box, so the padding gives
+            // back exactly the space it takes. Without this the cell overflows
+            // its 59pt slot in light mode, and every cell would jump 2pt as
+            // selection removed the border.
+            padding: EdgeInsets.symmetric(
               horizontal: AppSpacing.xs,
-              vertical: AppSpacing.sm,
+              vertical: _hasHairline(colors, isSelected)
+                  ? AppSpacing.sm - 1
+                  : AppSpacing.sm,
             ),
             decoration: BoxDecoration(
               color: isSelected ? colors.primary : colors.surface,
@@ -644,7 +656,7 @@ class _DateCell extends StatelessWidget {
               // off-white ground, so in light there is no value gap to separate
               // them. Dark needs none — the surface is already lighter than the
               // near-black ground. Same rule NearbyCard follows.
-              border: colors.brightness == Brightness.light && !isSelected
+              border: _hasHairline(colors, isSelected)
                   ? Border.all(color: colors.separator)
                   : null,
             ),

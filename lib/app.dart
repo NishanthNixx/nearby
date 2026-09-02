@@ -23,16 +23,20 @@ class NearbyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       routerConfig: router,
 
-      // Nearby commits to a dark appearance as a brand decision — the whole
-      // visual language (near-black ground, white booking pill, gold ratings)
-      // is built for it, the way high-end hospitality apps commit.
+      // Nearby commits to a LIGHT appearance. The dark-first version lost the
+      // argument on two counts.
       //
-      // Design guideline — Dark Mode > Best practices: "In rare cases, consider
-      // using only a dark appearance in the interface." The trade-off is real:
-      // a dark screen is harder to read in direct sunlight, and this app is
-      // used on the street. The light palette below keeps the same logic
-      // inverted, so reverting to system-following is a one-line change of
-      // [themeMode] if that trade-off proves wrong in use.
+      // The practical one was always in the open: this app is opened on a
+      // footpath in daylight, and a near-black screen is hardest to read
+      // exactly there.
+      //
+      // The second only showed up under measurement. The brand's colour is a
+      // four-hue spectrum, and on a near-black ground colour has to be placed
+      // in dim atmospheric layers to avoid blowing out — where it composites
+      // straight back to black (four measured "aurora" hues resolved to
+      // #0B1118, #0A0C1B, #120B13, #171010). On paper the same hues sit in
+      // opaque foreground fills and stay chromatic. The icon's own ground is
+      // white; the app now agrees with it.
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
 
@@ -43,7 +47,7 @@ class NearbyApp extends ConsumerWidget {
       highContrastTheme: AppTheme.light(highContrast: true),
       highContrastDarkTheme: AppTheme.dark(highContrast: true),
 
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       builder: (context, child) => _TextScaleGuard(child: child),
     );
   }

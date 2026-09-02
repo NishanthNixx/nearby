@@ -160,9 +160,9 @@ void main() {
     WidgetTester tester,
     Widget screen,
     String name, {
-    // Dark is the app's committed appearance, so it is the default here too —
-    // a light-only render would be reviewing a mode nobody sees.
-    Brightness brightness = Brightness.dark,
+    // Light is the app's committed appearance, so it is the default here too —
+    // a dark-only render would be reviewing a mode nobody sees.
+    Brightness brightness = Brightness.light,
     Size size = const Size(393, 852),
     AppColors? palette,
   }) async {
@@ -182,24 +182,24 @@ void main() {
     );
   }
 
-  testWidgets('discovery — light', (tester) async {
-    await capture(tester, const DiscoveryScreen(), 'discovery_dark');
+  testWidgets('discovery — default (light)', (tester) async {
+    await capture(tester, const DiscoveryScreen(), 'discovery_light');
   });
 
-  testWidgets('discovery — light counterpart', (tester) async {
+  testWidgets('discovery — dark counterpart', (tester) async {
     await capture(
       tester,
       const DiscoveryScreen(),
-      'discovery_light',
-      brightness: Brightness.light,
+      'discovery_dark',
+      brightness: Brightness.dark,
     );
   });
 
-  testWidgets('business profile — light', (tester) async {
+  testWidgets('business profile', (tester) async {
     await capture(
       tester,
       const BusinessProfileScreen(businessId: 'biz_2'),
-      'profile_dark',
+      'profile_light',
     );
   });
 
@@ -207,7 +207,7 @@ void main() {
     await capture(
       tester,
       const BookingFlowScreen(businessId: 'biz_2'),
-      'booking_service_dark',
+      'booking_service_light',
     );
   });
 
@@ -225,7 +225,7 @@ void main() {
           businessId: 'biz_2',
           preselectedServiceId: 'svc_3',
         ),
-        brightness: Brightness.dark,
+        brightness: Brightness.light,
       ),
     );
     await tester.pumpAndSettle();
@@ -240,7 +240,7 @@ void main() {
 
     await expectLater(
       find.byType(MaterialApp),
-      matchesGoldenFile('images/booking_schedule_dark.png'),
+      matchesGoldenFile('images/booking_schedule_light.png'),
     );
   });
 
@@ -248,11 +248,11 @@ void main() {
     await capture(
       tester,
       const CustomerBookingsScreen(),
-      'bookings_empty_dark',
+      'bookings_empty_light',
     );
   });
 
   testWidgets('sign in', (tester) async {
-    await capture(tester, const SignInScreen(), 'sign_in_dark');
+    await capture(tester, const SignInScreen(), 'sign_in_light');
   });
 }

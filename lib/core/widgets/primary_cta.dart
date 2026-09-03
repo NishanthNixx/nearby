@@ -176,12 +176,18 @@ class PrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.isBusy = false,
     this.icon,
+    this.trailingIcon,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final bool isBusy;
   final IconData? icon;
+
+  /// Sits after the label. A forward arrow on a sign-in or sign-up button says
+  /// "this continues" where a leading icon would try to say what the action is,
+  /// which the label already does.
+  final IconData? trailingIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -215,6 +221,10 @@ class PrimaryButton extends StatelessWidget {
                     const SizedBox(width: AppSpacing.sm),
                   ],
                   Text(label),
+                  if (trailingIcon != null) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Icon(trailingIcon, size: AppSizing.iconMd),
+                  ],
                 ],
               ),
         ),

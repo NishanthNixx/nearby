@@ -254,7 +254,29 @@ void main() {
   });
 
   testWidgets('sign in', (tester) async {
-    await capture(tester, const SignInScreen(), 'sign_in_light');
+    await tester.binding.setSurfaceSize(const Size(393, 852));
+    tester.view.physicalSize = const Size(393, 852) * 3;
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      host(const SignInScreen(), brightness: Brightness.light),
+    );
+    await tester.pumpAndSettle();
+
+    // Only the decode goes inside runAsync — see the sign-up test.
+    await tester.runAsync(() async {
+      await precacheImage(
+        const AssetImage('assets/brand/hero.jpg'),
+        tester.element(find.byType(SignInScreen)),
+      );
+    });
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(SignInScreen),
+      matchesGoldenFile('images/sign_in_light.png'),
+    );
   });
 
   testWidgets('sign up', (tester) async {

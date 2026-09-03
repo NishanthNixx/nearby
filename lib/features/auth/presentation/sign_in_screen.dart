@@ -93,23 +93,24 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               vertical: AppSpacing.xl,
             ),
             children: [
-              const SizedBox(height: AppSpacing.xxl),
-              const NearbyWordmark(fontSize: 36),
+              // The artwork carries the wordmark itself, so no separate
+              // NearbyWordmark sits above it — two lockups on one screen would
+              // be a repetition, not a hierarchy.
+              const BrandHero(),
               const SizedBox(height: AppSpacing.lg),
-              // The icon's dashed arc, straightened into a brand bar under
-              // the wordmark.
-              const BrandRule(),
-              const SizedBox(height: AppSpacing.xl),
               Text(
                 'Welcome back',
-                style: context.type.largeTitle.copyWith(color: colors.label),
+                style: context.type.largeTitle.copyWith(color: colors.primary),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'Sign in to book appointments and manage your bookings.',
                 style: context.type.body.copyWith(color: colors.labelSecondary),
               ),
-              const SizedBox(height: AppSpacing.xxxl),
+              const SizedBox(height: AppSpacing.lg),
+              // The stitch line: a seam between the masthead and the form.
+              const BrandRule(height: 3),
+              const SizedBox(height: AppSpacing.xl),
 
               AppTextField(
                 controller: _email,
@@ -143,6 +144,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
               PrimaryButton(
                 label: 'Sign in',
+                trailingIcon: Icons.arrow_forward_rounded,
                 isBusy: formState.isSubmitting,
                 onPressed: _submit,
               ),

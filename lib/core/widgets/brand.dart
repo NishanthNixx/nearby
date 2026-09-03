@@ -703,3 +703,48 @@ class BrandBanner extends StatelessWidget {
     );
   }
 }
+
+/// The marketplace illustration as a screen-opening hero, faded out at its
+/// edges so it sits on the ground rather than in a box.
+///
+/// The fade is a radial mask rather than a rounded rectangle, which is what
+/// keeps the illustration from reading as a photo in a card. Its edges dissolve
+/// into the bone background, so the eye goes to the centre — where the artwork
+/// already carries the NEARBY wordmark — and the composition has no hard border
+/// competing with the form beneath it.
+///
+/// Distinct from [BrandBanner], which blurs the same family of artwork behind a
+/// scrim to serve as a backdrop for text. Here the artwork IS the content, so
+/// it stays sharp and nothing is laid over it.
+class BrandHero extends StatelessWidget {
+  const BrandHero({super.key, this.height = 248});
+
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: SizedBox(
+        height: height,
+        width: double.infinity,
+        child: ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (bounds) => const RadialGradient(
+            radius: 0.78,
+            colors: [Colors.black, Colors.black, Colors.transparent],
+            stops: [0.0, 0.45, 0.80],
+          ).createShader(bounds),
+          child: Image.asset(
+            'assets/brand/hero.jpg',
+            // fitWidth, not cover: the artwork is 512x382 and the wordmark sits
+            // near its top edge, so cover crops exactly the part that must
+            // survive. Fitting the width keeps the full composition and lets
+            // the radial fade absorb the overflow at the bottom instead.
+            fit: BoxFit.fitWidth,
+            alignment: Alignment.topCenter,
+          ),
+        ),
+      ),
+    );
+  }
+}

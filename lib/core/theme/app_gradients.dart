@@ -33,8 +33,8 @@ abstract final class AppGradients {
   /// before white ink would clear. Any future accent asked to carry text has
   /// to be dark first and chromatic second, in that order.
   static const LinearGradient action = LinearGradient(
-    begin: Alignment.centerLeft,
-    end: Alignment.centerRight,
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
     colors: [cognac, chocolate],
   );
 }

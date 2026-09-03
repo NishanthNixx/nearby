@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/brand.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_feedback.dart';
@@ -81,6 +82,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               horizontal: AppSpacing.screenMargin,
             ),
             children: [
+              const BrandBanner(),
+              const SizedBox(height: AppSpacing.xxl),
               Text(
                 'Create account',
                 style: context.type.largeTitle.copyWith(color: colors.label),
@@ -141,7 +144,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 // omittable, so nobody wonders whether they have to fill it.
                 helper: _role.isBusinessOwner
                     ? 'Shown to customers so they can reach you'
-                    : 'Optional — helps your tailor contact you',
+                    : 'Optional — helps the business contact you',
                 keyboardType: TextInputType.phone,
                 autofillHints: const [AutofillHints.telephoneNumber],
                 prefixIcon: Icons.phone_outlined,
@@ -237,15 +240,15 @@ class _RoleChoice extends StatelessWidget {
     return Column(
       children: [
         _RoleCard(
-          title: 'I want to book a tailor',
-          subtitle: 'Find tailors nearby and book appointments',
+          title: 'I want to book services',
+          subtitle: 'Find businesses nearby and book appointments',
           icon: Icons.search_rounded,
           isSelected: value == UserRole.customer,
           onTap: () => onChanged(UserRole.customer),
         ),
         const SizedBox(height: AppSpacing.md),
         _RoleCard(
-          title: 'I am a tailor',
+          title: 'I offer services',
           subtitle: 'List your shop and manage your appointments',
           icon: Icons.storefront_rounded,
           isSelected: value == UserRole.businessOwner,

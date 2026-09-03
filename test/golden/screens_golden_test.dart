@@ -15,6 +15,7 @@ import 'package:nearby/core/theme/app_colors.dart';
 import 'package:nearby/core/theme/app_theme.dart';
 import 'package:nearby/core/utils/geo.dart';
 import 'package:nearby/features/auth/presentation/sign_in_screen.dart';
+import 'package:nearby/features/auth/presentation/sign_up_screen.dart';
 import 'package:nearby/features/bookings/presentation/booking_flow_screen.dart';
 import 'package:nearby/features/bookings/presentation/customer_bookings_screen.dart';
 import 'package:nearby/features/businesses/presentation/business_profile_screen.dart';
@@ -254,5 +255,34 @@ void main() {
 
   testWidgets('sign in', (tester) async {
     await capture(tester, const SignInScreen(), 'sign_in_light');
+  });
+
+  testWidgets('sign up', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(393, 852));
+    tester.view.physicalSize = const Size(393, 852) * 3;
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      host(const SignUpScreen(), brightness: Brightness.light),
+    );
+    await tester.pumpAndSettle();
+
+    // ONLY the decode goes inside runAsync. pumpWidget must stay outside it:
+    // within runAsync the test binding stops intercepting asset loads, so
+    // Image.asset falls through to PlatformAssetBundle and fails to find a
+    // bundle that exists perfectly well from rootBundle.
+    await tester.runAsync(() async {
+      await precacheImage(
+        const AssetImage('assets/brand/marketplace.jpg'),
+        tester.element(find.byType(SignUpScreen)),
+      );
+    });
+    await tester.pumpAndSettle();
+
+    await expectLater(
+      find.byType(SignUpScreen),
+      matchesGoldenFile('images/sign_up_light.png'),
+    );
   });
 }

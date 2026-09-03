@@ -220,7 +220,18 @@ class PrimaryButton extends StatelessWidget {
                     Icon(icon, size: AppSizing.iconMd),
                     const SizedBox(width: AppSpacing.sm),
                   ],
-                  Text(label),
+                  // Flexible, because the label is scalable text sharing a
+                  // fixed-width pill with up to two icons. At 320pt and 2.0x
+                  // scale an unflexed label plus a trailing arrow overflowed by
+                  // 11px — the label gives way, the affordance stays.
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                   if (trailingIcon != null) ...[
                     const SizedBox(width: AppSpacing.sm),
                     Icon(trailingIcon, size: AppSizing.iconMd),

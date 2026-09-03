@@ -729,10 +729,19 @@ class BrandHero extends StatelessWidget {
         width: double.infinity,
         child: ShaderMask(
           blendMode: BlendMode.dstIn,
+          // RadialGradient.radius is a fraction of the box's SHORTEST side, so
+          // in a wide box a radius under ~1.0 puts the transparent edge inside
+          // the left and right margins and erases them. At 393x248 the sides
+          // sit 196px from the centre while radius 0.78 went transparent at
+          // 193px — the outer vignettes were being cut away entirely.
+          //
+          // 1.15 pushes the transparent edge out to ~285px, leaving the sides
+          // around 78% opaque and reserving the real falloff for the corners,
+          // which is where a hard rectangle edge would otherwise show.
           shaderCallback: (bounds) => const RadialGradient(
-            radius: 0.78,
+            radius: 1.15,
             colors: [Colors.black, Colors.black, Colors.transparent],
-            stops: [0.0, 0.45, 0.80],
+            stops: [0.0, 0.60, 1.0],
           ).createShader(bounds),
           child: Image.asset(
             'assets/brand/hero.jpg',

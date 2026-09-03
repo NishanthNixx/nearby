@@ -124,10 +124,10 @@ class PrimaryCtaBar extends StatelessWidget {
                     flex: secondaryLabel == null ? 1 : 2,
                     child: SizedBox(
                       height: AppSizing.primaryButtonHeight,
-                      child: _SpectrumPill(
+                      child: ActionPill(
                         enabled: !isBusy && onPressed != null,
                         child: FilledButton(
-                        style: _spectrumStyle,
+                        style: actionButtonStyle,
                         onPressed: isBusy ? null : onPressed,
                         child: isBusy
                             ? const SizedBox(
@@ -199,10 +199,10 @@ class PrimaryButton extends StatelessWidget {
         minWidth: double.infinity,
         minHeight: AppSizing.primaryButtonHeight,
       ),
-      child: _SpectrumPill(
+      child: ActionPill(
         enabled: !isBusy && onPressed != null,
         child: FilledButton(
-        style: _spectrumStyle,
+        style: actionButtonStyle,
         onPressed: isBusy ? null : onPressed,
         child: isBusy
             ? const SizedBox(
@@ -255,8 +255,8 @@ class PrimaryButton extends StatelessWidget {
 /// Disabled drops the gradient entirely rather than fading it: a washed-out
 /// gradient still reads as decoration, where a flat raised surface reads as
 /// unavailable.
-class _SpectrumPill extends StatelessWidget {
-  const _SpectrumPill({required this.enabled, required this.child});
+class ActionPill extends StatelessWidget {
+  const ActionPill({super.key, required this.enabled, required this.child});
 
   final bool enabled;
   final Widget child;
@@ -276,7 +276,9 @@ class _SpectrumPill extends StatelessWidget {
 
 /// Makes the button itself transparent so [_SpectrumPill]'s gradient shows
 /// through, and pins the label to the ink measured against that gradient.
-final ButtonStyle _spectrumStyle = FilledButton.styleFrom(
+/// Pairs with [ActionPill]: makes the button transparent so the pill's
+/// gradient shows through, and pins the label to the measured ink.
+final ButtonStyle actionButtonStyle = FilledButton.styleFrom(
   backgroundColor: Colors.transparent,
   disabledBackgroundColor: Colors.transparent,
   foregroundColor: AppGradients.onAction,

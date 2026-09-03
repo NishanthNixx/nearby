@@ -73,7 +73,7 @@ class AppTextField extends StatelessWidget {
         Text(
           label,
           style: context.type.footnoteEmphasis.copyWith(
-            color: colors.labelSecondary,
+            color: colors.primary,
           ),
         ),
         const SizedBox(height: AppSpacing.sm - 2),

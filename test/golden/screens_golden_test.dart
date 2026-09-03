@@ -280,8 +280,11 @@ void main() {
   });
 
   testWidgets('sign up', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(393, 852));
-    tester.view.physicalSize = const Size(393, 852) * 3;
+    // Taller than a phone on purpose: sign-up is a long form and the parts
+    // most worth reviewing — the terms note and the gradient CTA — sit below
+    // an 852pt fold, where a golden would never show them.
+    await tester.binding.setSurfaceSize(const Size(393, 1240));
+    tester.view.physicalSize = const Size(393, 1240) * 3;
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
 

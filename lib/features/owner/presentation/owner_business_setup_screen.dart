@@ -117,6 +117,13 @@ class _OwnerBusinessSetupScreenState
         context,
         message: 'Your shop is listed. Add your services next.',
       );
+
+      // The router moves off this screen once the linked business clears
+      // `needsBusinessSetup`, so this normally unmounts a frame later. Clearing
+      // the flag anyway is the safety net: if that redirect ever fails to fire,
+      // the alternative is a spinner that never resolves on a screen with no
+      // back affordance, which is exactly the trap this had.
+      if (mounted) setState(() => _isSubmitting = false);
     } catch (error) {
       if (!mounted) return;
       final failure = toAppFailure(error);

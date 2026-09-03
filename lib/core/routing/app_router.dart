@@ -56,37 +56,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: false,
     redirect: (context, state) {
       final auth = ref.read(authStateProvider);
-
-      // Still restoring the session: hold on the splash screen.
-      if (auth.isLoading) {
-        return state.matchedLocation == '/' ? null : '/';
-      }
-
-      final user = auth.value;
-      final location = state.matchedLocation;
-      final onAuthScreen = location == '/sign-in' || location == '/sign-up';
-      final onSplash = location == '/';
-
-      if (user == null) {
-        // Signed out: everything except the auth screens redirects to sign-in.
-        return onAuthScreen ? null : '/sign-in';
-      }
-
-      // Signed in: leaving the splash/auth screens, land on the home for the
-      // user's role.
-      if (onSplash || onAuthScreen) return _homeFor(user);
-
-      // An owner with no business yet is walked through setup first.
-      if (user.needsBusinessSetup && !location.startsWith('/owner/setup')) {
-        return '/owner/setup';
-      }
-
-      // Role fencing: a customer cannot open owner routes and vice versa.
-      final isOwnerRoute = location.startsWith('/owner');
-      if (isOwnerRoute && !user.role.isBusinessOwner) return _homeFor(user);
-      if (!isOwnerRoute && user.role.isBusinessOwner) return _homeFor(user);
-
-      return null;
+      return redirectFor(
+        isRestoring: auth.isLoading,
+        user: auth.value,
+        location: state.matchedLocation,
+      );
     },
     routes: [
       GoRoute(
@@ -234,6 +208,55 @@ final routerProvider = Provider<GoRouter>((ref) {
 });
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Where a request for [location] should actually land, or null to stay put.
+///
+/// Extracted from the router so it can be tested directly. It is a pure
+/// function of the session and the target, which is the whole reason it is
+/// worth pulling out: every rule here is a sentence about who may be where,
+/// and those sentences are cheap to assert and expensive to debug through a
+/// navigator.
+@visibleForTesting
+String? redirectFor({
+  required bool isRestoring,
+  required AppUser? user,
+  required String location,
+}) {
+  // Still restoring the session: hold on the splash screen.
+  if (isRestoring) return location == '/' ? null : '/';
+
+  final onAuthScreen = location == '/sign-in' || location == '/sign-up';
+  final onSplash = location == '/';
+
+  if (user == null) {
+    // Signed out: everything except the auth screens redirects to sign-in.
+    return onAuthScreen ? null : '/sign-in';
+  }
+
+  // Signed in: leaving the splash/auth screens, land on the home for the
+  // user's role.
+  if (onSplash || onAuthScreen) return _homeFor(user);
+
+  final onSetup = location.startsWith('/owner/setup');
+
+  // An owner with no business yet is walked through setup first.
+  if (user.needsBusinessSetup && !onSetup) return '/owner/setup';
+
+  // ...and an owner who has FINISHED setup must not be left sitting on it.
+  //
+  // Without this, listing a shop succeeded and then went nowhere: setup is a
+  // valid owner route, so the role fence below was happy to leave them there —
+  // on a screen with no back affordance, whose only button had already been
+  // spent. The gate has to open in both directions.
+  if (!user.needsBusinessSetup && onSetup) return _homeFor(user);
+
+  // Role fencing: a customer cannot open owner routes and vice versa.
+  final isOwnerRoute = location.startsWith('/owner');
+  if (isOwnerRoute && !user.role.isBusinessOwner) return _homeFor(user);
+  if (!isOwnerRoute && user.role.isBusinessOwner) return _homeFor(user);
+
+  return null;
+}
 
 String _homeFor(AppUser user) {
   if (user.role.isBusinessOwner) {
